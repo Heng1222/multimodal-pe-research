@@ -1,0 +1,48 @@
+[project]
+name = "multimodal-pe-research"
+version = "0.1.0"
+description = "Reproducible multimodal PE data pipelines, models, and experiments."
+readme = "README.md"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "pefile>=2024.8.26",
+    "pydantic>=2.11",
+    "pydantic-settings>=2.10",
+    "typer>=0.16",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.17",
+    "pytest>=8.4",
+    "pytest-cov>=6.2",
+    "ruff>=0.12",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.13,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "pe_research"
+module-root = "src"
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "SIM", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["pe_research"]
+strict = true
+
+[tool.coverage.run]
+branch = true
+source = ["pe_research"]

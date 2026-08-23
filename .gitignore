@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and uv cache
+.venv/
+.uv-cache/
+.uv-python/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Research data and generated artifacts
+dataset_workspace/
+*.sqlite
+*.sqlite3
+*.db
+*.pe
+*.exe
+*.dll
+*.sys
+*.bin
+*.ckpt
+*.pt
+*.pth
+*.onnx
+wandb/
+mlruns/
