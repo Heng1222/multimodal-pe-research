@@ -1,1 +1,3 @@
-trace_id,sample_key,split,vt_behavior_id,sandbox_name,analysis_date,event_count,field_coverage,is_canonical,trace_quality,ordering_known,sequence_eligible,raw_report_path,network_policy
+version https://git-lfs.github.com/spec/v1
+oid sha256:b917b50078748909d76673f7e653e4ea805174a28fdd7957f870205ac0be754b
+size 187

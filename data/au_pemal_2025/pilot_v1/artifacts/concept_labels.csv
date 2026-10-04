@@ -1,1 +1,3 @@
-trace_id,concept_id,concept_type,tactic,tactic_known,technique_id,technique_name,value,known_mask,evidence_source,evidence_scope
+version https://git-lfs.github.com/spec/v1
+oid sha256:4cd28861c5b6847989d2a70bcb2007f3cb558df18e2bdf7d3fa8154b8198137e
+size 130
