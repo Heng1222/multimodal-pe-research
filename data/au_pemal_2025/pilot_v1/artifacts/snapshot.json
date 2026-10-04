@@ -5,48 +5,44 @@
       "sha256": "ea71a0fb9e013be736367e6540c6bca70bb8c30a15546910b4887290e5e29f2d"
     },
     "concept_labels.csv": {
-      "bytes": 131725,
-      "sha256": "414c075856170e7b15d12204c0d11c3750bbbf0c6aacfa15548c15e52396bb53"
+      "bytes": 130,
+      "sha256": "4cd28861c5b6847989d2a70bcb2007f3cb558df18e2bdf7d3fa8154b8198137e"
     },
     "embedding_metadata.json": {
-      "bytes": 430,
-      "sha256": "b4b26337628e0c1f7f04f9b1431af6fab9aae4dd1a6a423cd69d9b2c469fdcab"
+      "bytes": 415,
+      "sha256": "c8a8acc42632484e9976bb3196a1b9a016c9e38f34f3cfad2029080389c10eb5"
     },
     "enrichment_state.json": {
-      "bytes": 145,
-      "sha256": "438490353913300bf551d57b60db5320536b6d5807b5b86f8de319262d8d8dbb"
+      "bytes": 70,
+      "sha256": "b172d6621e8412258292084d13a3c8b6feab1eefd2478e48671a15115247dc75"
     },
     "event_embeddings_minilm384.csv": {
-      "bytes": 58777614,
-      "sha256": "7397fdf5dfb3fcbdc74d239478f2250cdccceaa99d1598ac601824f26481952c"
+      "bytes": 5398,
+      "sha256": "54750e65ac9ce900a90a6e99cf2506dd2651fc0078279a76c04c6692bf77c538"
     },
     "events.csv": {
-      "bytes": 2644382,
-      "sha256": "d5b23cd4e85c0127ef16f4de3ec8e460682f72396117e1337344bba34cc83d71"
-    },
-    "lookup_results.csv": {
-      "bytes": 8487,
-      "sha256": "cb3788ac0d91421c4d9517ce608d25f5b9765e4d4790b31c274b89917c375ba0"
+      "bytes": 130,
+      "sha256": "77db0dbe58f1ce0aa19351fd1c9a36fadde438ea867c2d6e9b93436764357ec7"
     },
     "sample_labels.csv": {
       "bytes": 10118,
       "sha256": "d67258355663b9b323291109f27eeb17b47a647e56bd738647e4b0aec76b0d2e"
     },
     "samples.csv": {
-      "bytes": 16510,
-      "sha256": "fb6fe51a0e3973c04a004e959214680ddf20b971760e0abddb5f163fb681c7d5"
+      "bytes": 13944,
+      "sha256": "db35f6c8eb1958c3fd2342e0a1de786991fc53fe056961bed991e891357ca78b"
     },
     "source_features.csv": {
       "bytes": 23108,
       "sha256": "ba879473f737f793bc3f4b17dfb6ccc21091f0f645a237b930c27414e9a17037"
     },
     "source_validation.json": {
-      "bytes": 8357,
-      "sha256": "5375715ae05245cad1d81f5ab3f367b0ab2579cec154bbe4d52c5a29ff57020d"
+      "bytes": 7983,
+      "sha256": "d68c6737bd81ce566d51b2fe1e6689f11d6dd32c4d7e0cfcf57814296a1f0fe1"
     },
     "traces.csv": {
-      "bytes": 77938,
-      "sha256": "e7867e9537da04b9fa866322c9675bb01ef1168bf214c58a902709b8a0e6ba26"
+      "bytes": 187,
+      "sha256": "b917b50078748909d76673f7e653e4ea805174a28fdd7957f870205ac0be754b"
     }
   },
   "dependencies": {
@@ -63,34 +59,33 @@
   },
   "quality": {
     "counts": {
-      "canonical_valid_traces": 40,
-      "embeddings": 11161,
-      "events": 11161,
+      "canonical_valid_traces": 0,
+      "embeddings": 0,
+      "events": 0,
       "samples": 100,
-      "traces": 231
+      "traces": 0
     },
     "enrichment_state": {
-      "processed_candidates": 43,
-      "reason": "targets_met_or_candidates_exhausted",
-      "status": "complete",
-      "successful_candidates": 40
+      "reason": "authentication_or_permission",
+      "status": "stopped"
     },
-    "errors": [],
+    "errors": [
+      "minimum dynamic coverage not met for benign: 0/10",
+      "minimum dynamic coverage not met for malicious: 0/10"
+    ],
     "failure_reasons": {
-      "hash_miss": 3,
+      "hash_miss": 0,
       "no_behavior": 0,
-      "pending_not_enriched": 57,
-      "permission_or_authentication": 0,
+      "pending_not_enriched": 100,
+      "permission_or_authentication": 1,
       "quota_exhausted": 0,
       "trace_quality_insufficient": 0
     },
     "lookup_status": {
-      "not_found": 3,
-      "pending": 57,
-      "success": 40
+      "pending": 100
     },
     "missingness": {
-      "dynamic_report_fraction": 0.6,
+      "dynamic_report_fraction": 1.0,
       "ordering_unknown_fraction_among_canonical": 1.0
     },
     "ordering": {
@@ -471,12 +466,9 @@
       "source_rows": 21703,
       "unique_sha1": 13904
     },
-    "successful_dynamic_samples": {
-      "benign": 20,
-      "malicious": 20
-    },
-    "valid": true,
-    "virustotal_requests_recorded": 83
+    "successful_dynamic_samples": {},
+    "valid": false,
+    "virustotal_requests_recorded": 0
   },
   "schema_version": "au_pemal_pilot/v1",
   "source": {

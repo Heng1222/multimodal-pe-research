@@ -1,33 +1,32 @@
 {
   "counts": {
-    "canonical_valid_traces": 40,
-    "embeddings": 11161,
-    "events": 11161,
+    "canonical_valid_traces": 0,
+    "embeddings": 0,
+    "events": 0,
     "samples": 100,
-    "traces": 231
+    "traces": 0
   },
   "enrichment_state": {
-    "processed_candidates": 43,
-    "reason": "targets_met_or_candidates_exhausted",
-    "status": "complete",
-    "successful_candidates": 40
+    "reason": "authentication_or_permission",
+    "status": "stopped"
   },
-  "errors": [],
+  "errors": [
+    "minimum dynamic coverage not met for benign: 0/10",
+    "minimum dynamic coverage not met for malicious: 0/10"
+  ],
   "failure_reasons": {
-    "hash_miss": 3,
+    "hash_miss": 0,
     "no_behavior": 0,
-    "pending_not_enriched": 57,
-    "permission_or_authentication": 0,
+    "pending_not_enriched": 100,
+    "permission_or_authentication": 1,
     "quota_exhausted": 0,
     "trace_quality_insufficient": 0
   },
   "lookup_status": {
-    "not_found": 3,
-    "pending": 57,
-    "success": 40
+    "pending": 100
   },
   "missingness": {
-    "dynamic_report_fraction": 0.6,
+    "dynamic_report_fraction": 1.0,
     "ordering_unknown_fraction_among_canonical": 1.0
   },
   "ordering": {
@@ -408,10 +407,7 @@
     "source_rows": 21703,
     "unique_sha1": 13904
   },
-  "successful_dynamic_samples": {
-    "benign": 20,
-    "malicious": 20
-  },
-  "valid": true,
-  "virustotal_requests_recorded": 83
+  "successful_dynamic_samples": {},
+  "valid": false,
+  "virustotal_requests_recorded": 0
 }
