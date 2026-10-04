@@ -1,0 +1,337 @@
+"""Frozen GTE-ModernBERT embeddings for complete ordered API traces."""
+
+from __future__ import annotations
+
+import csv
+import hashlib
+import importlib
+import math
+import os
+from collections.abc import Callable, Iterator, Sequence
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Protocol
+
+from pe_research.data.api_traces.config import SampleEmbeddingConfig
+from pe_research.data.api_traces.normalization import API_NORMALIZATION_VERSION
+from pe_research.data.io import atomic_json, package_version, read_csv, sha256_file
+
+
+@dataclass(frozen=True)
+class TokenCoverage:
+    """Token coverage after the model's fixed context limit is applied."""
+
+    event_count: int
+    original_token_count: int
+    retained_token_count: int
+    truncated: bool
+
+
+@dataclass(frozen=True)
+class EncodedBatch:
+    vectors: list[list[float]]
+    coverage: list[TokenCoverage]
+
+
+class OrderedSampleEncoder(Protocol):
+    """Injectable interface used to keep model downloads out of unit tests."""
+
+    @property
+    def runtime_metadata(self) -> dict[str, object]: ...
+
+    def encode(self, ordered_events: Sequence[Sequence[str]]) -> EncodedBatch: ...
+
+
+class FrozenGteModernBertEncoder:
+    """Run one inference-only GTE forward pass and return final-layer CLS."""
+
+    def __init__(self, config: SampleEmbeddingConfig, cache_folder: Path) -> None:
+        try:
+            self._torch = importlib.import_module("torch")
+            transformers = importlib.import_module("transformers")
+        except ModuleNotFoundError as error:
+            raise RuntimeError(
+                "GTE embedding dependencies are missing; run `uv sync --extra embedding`"
+            ) from error
+
+        cache_folder.mkdir(parents=True, exist_ok=True)
+        auto_tokenizer = transformers.AutoTokenizer
+        auto_model = transformers.AutoModel
+        self._tokenizer = auto_tokenizer.from_pretrained(
+            config.model_name,
+            revision=config.model_revision,
+            cache_dir=str(cache_folder),
+            trust_remote_code=False,
+        )
+        self._model = auto_model.from_pretrained(
+            config.model_name,
+            revision=config.model_revision,
+            cache_dir=str(cache_folder),
+            trust_remote_code=False,
+            use_safetensors=True,
+        )
+        hidden_size = int(getattr(self._model.config, "hidden_size", 0))
+        if hidden_size != config.dimension:
+            raise ValueError(
+                f"model hidden size is {hidden_size}, expected {config.dimension}"
+            )
+        model_limit = int(
+            getattr(self._model.config, "max_position_embeddings", config.maximum_tokens)
+        )
+        if model_limit < config.maximum_tokens:
+            raise ValueError(
+                f"model context limit is {model_limit}, below requested {config.maximum_tokens}"
+            )
+        if config.device == "auto":
+            self._device = "cuda" if self._torch.cuda.is_available() else "cpu"
+        else:
+            self._device = config.device
+        self._model.to(self._device)
+        self._model.eval()
+        self._model.requires_grad_(False)
+        self._config = config
+        self._separator = f" {self._tokenizer.sep_token or '[SEP]'} "
+
+    @property
+    def runtime_metadata(self) -> dict[str, object]:
+        return {
+            "device": self._device,
+            "separator_token": self._tokenizer.sep_token or "[SEP]",
+            "model_class": type(self._model).__name__,
+            "tokenizer_class": type(self._tokenizer).__name__,
+        }
+
+    def encode(self, ordered_events: Sequence[Sequence[str]]) -> EncodedBatch:
+        texts = [self._separator.join(events) for events in ordered_events]
+        original = self._tokenizer(
+            texts,
+            add_special_tokens=True,
+            padding=False,
+            truncation=False,
+            return_attention_mask=False,
+            verbose=False,
+        )["input_ids"]
+        encoded = self._tokenizer(
+            texts,
+            add_special_tokens=True,
+            padding=True,
+            truncation=True,
+            max_length=self._config.maximum_tokens,
+            return_tensors="pt",
+        )
+        model_inputs = {
+            name: tensor.to(self._device)
+            for name, tensor in encoded.items()
+            if name in {"input_ids", "attention_mask", "token_type_ids"}
+        }
+        with self._torch.inference_mode():
+            outputs = self._model(**model_inputs)
+            vectors = outputs.last_hidden_state[:, 0, :]
+            if self._config.normalize:
+                vectors = self._torch.nn.functional.normalize(vectors, p=2, dim=1)
+        retained = encoded["attention_mask"].sum(dim=1).tolist()
+        coverage = [
+            TokenCoverage(
+                event_count=len(events),
+                original_token_count=len(token_ids),
+                retained_token_count=int(retained_count),
+                truncated=len(token_ids) > int(retained_count),
+            )
+            for events, token_ids, retained_count in zip(
+                ordered_events, original, retained, strict=True
+            )
+        ]
+        values = vectors.detach().cpu().float().tolist()
+        return EncodedBatch(vectors=values, coverage=coverage)
+
+
+def _iter_ordered_events(events_path: Path) -> Iterator[tuple[str, list[str]]]:
+    """Yield each sample once while enforcing contiguous zero-based event order."""
+    with events_path.open("r", encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        current_sample = ""
+        texts: list[str] = []
+        expected_index = 0
+        seen: set[str] = set()
+        for row in reader:
+            sample_id = row["sample_id"]
+            if sample_id != current_sample:
+                if current_sample:
+                    seen.add(current_sample)
+                    yield current_sample, texts
+                if sample_id in seen:
+                    raise ValueError(f"events for {sample_id} are not contiguous")
+                current_sample = sample_id
+                texts = []
+                expected_index = 0
+            event_index = int(row["event_index"])
+            if event_index != expected_index:
+                raise ValueError(
+                    f"non-contiguous event_index for {sample_id}: "
+                    f"expected {expected_index}, got {event_index}"
+                )
+            api_name = row["api_name"].strip()
+            if not api_name:
+                raise ValueError(f"empty api_name for {sample_id} event {event_index}")
+            texts.append(f"api={api_name}")
+            expected_index += 1
+        if current_sample:
+            yield current_sample, texts
+
+
+def _close_memmap(matrix: Any) -> None:
+    matrix.flush()
+    memory_map = getattr(matrix, "_mmap", None)
+    if memory_map is not None and not memory_map.closed:
+        memory_map.close()
+
+
+def write_frozen_sample_embeddings(
+    events_path: Path,
+    samples_path: Path,
+    output_csv: Path,
+    output_npy: Path,
+    coverage_path: Path,
+    metadata_path: Path,
+    config: SampleEmbeddingConfig,
+    cache_folder: Path,
+    *,
+    encoder: OrderedSampleEncoder | None = None,
+    progress: Callable[[str], None] | None = None,
+) -> int:
+    """Create one label-free 768-D row per sample without training any weights."""
+    try:
+        numpy = importlib.import_module("numpy")
+    except ModuleNotFoundError as error:
+        raise RuntimeError("NumPy is required for sample embeddings") from error
+
+    sample_rows = read_csv(samples_path)
+    sample_ids = [row["sample_id"] for row in sample_rows]
+    if not sample_ids:
+        raise ValueError("samples.csv is empty")
+    if len(sample_ids) != len(set(sample_ids)):
+        raise ValueError("samples.csv contains duplicate sample_id values")
+
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    output_npy.parent.mkdir(parents=True, exist_ok=True)
+    coverage_path.parent.mkdir(parents=True, exist_ok=True)
+    csv_part = output_csv.with_suffix(output_csv.suffix + ".part")
+    npy_part = output_npy.with_suffix(output_npy.suffix + ".part")
+    coverage_part = coverage_path.with_suffix(coverage_path.suffix + ".part")
+    dimensions = [f"embedding_{index:03d}" for index in range(config.dimension)]
+    matrix = numpy.lib.format.open_memmap(
+        npy_part,
+        mode="w+",
+        dtype=numpy.float32,
+        shape=(len(sample_ids), config.dimension),
+    )
+    actual_encoder = encoder or FrozenGteModernBertEncoder(config, cache_folder)
+    digest = hashlib.sha256()
+    groups = _iter_ordered_events(events_path)
+    written = 0
+
+    try:
+        with (
+            csv_part.open("w", encoding="utf-8", newline="") as output_stream,
+            coverage_part.open("w", encoding="utf-8", newline="") as coverage_stream,
+        ):
+            writer = csv.writer(output_stream)
+            coverage_writer = csv.DictWriter(
+                coverage_stream,
+                fieldnames=[
+                    "sample_id",
+                    "event_count",
+                    "original_token_count",
+                    "retained_token_count",
+                    "truncated",
+                ],
+            )
+            writer.writerow(["sample_id", *dimensions])
+            coverage_writer.writeheader()
+            while written < len(sample_ids):
+                batch_ids = sample_ids[written : written + config.batch_size]
+                batch_events: list[list[str]] = []
+                for expected_sample in batch_ids:
+                    try:
+                        actual_sample, events = next(groups)
+                    except StopIteration as error:
+                        raise ValueError(f"events.csv is missing {expected_sample}") from error
+                    if actual_sample != expected_sample:
+                        raise ValueError(
+                            "samples.csv and events.csv row order differ: "
+                            f"expected {expected_sample}, got {actual_sample}"
+                        )
+                    batch_events.append(events)
+                    digest.update(expected_sample.encode("utf-8"))
+                    for text in events:
+                        digest.update(b"\x1e")
+                        digest.update(text.encode("utf-8"))
+                encoded = actual_encoder.encode(batch_events)
+                if len(encoded.vectors) != len(batch_ids):
+                    raise ValueError("encoder returned a different sample count")
+                if len(encoded.coverage) != len(batch_ids):
+                    raise ValueError("encoder returned a different coverage count")
+                for offset, (sample_id, vector, coverage) in enumerate(
+                    zip(batch_ids, encoded.vectors, encoded.coverage, strict=True)
+                ):
+                    if len(vector) != config.dimension:
+                        raise ValueError(
+                            f"expected {config.dimension} dimensions, got {len(vector)}"
+                        )
+                    values = [float(value) for value in vector]
+                    if any(not math.isfinite(value) for value in values):
+                        raise ValueError("encoder returned NaN or infinite values")
+                    row_index = written + offset
+                    matrix[row_index] = values
+                    writer.writerow([sample_id, *(format(value, ".9g") for value in values)])
+                    coverage_writer.writerow(
+                        {
+                            "sample_id": sample_id,
+                            **asdict(coverage),
+                            "truncated": int(coverage.truncated),
+                        }
+                    )
+                written += len(batch_ids)
+                if progress is not None and (
+                    written == len(sample_ids) or written % 20 == 0
+                ):
+                    progress(f"embedded {written}/{len(sample_ids)} ordered API traces")
+        try:
+            extra_sample, _extra_events = next(groups)
+        except StopIteration:
+            pass
+        else:
+            raise ValueError(f"events.csv contains unexpected sample {extra_sample}")
+        _close_memmap(matrix)
+        os.replace(csv_part, output_csv)
+        os.replace(npy_part, output_npy)
+        os.replace(coverage_part, coverage_path)
+    except Exception:
+        _close_memmap(matrix)
+        raise
+
+    atomic_json(
+        metadata_path,
+        {
+            "model_name": config.model_name,
+            "model_revision": config.model_revision,
+            "dimension": config.dimension,
+            "maximum_tokens": config.maximum_tokens,
+            "pooling": config.pooling,
+            "normalize_embeddings": config.normalize,
+            "frozen": True,
+            "training_performed": False,
+            "input_format": config.input_format,
+            "input": "api=<api_name> joined by tokenizer SEP in event_index order",
+            "normalization_version": API_NORMALIZATION_VERSION,
+            "ordered_api_text_digest": digest.hexdigest(),
+            "events_sha256": sha256_file(events_path),
+            "output_sha256": sha256_file(output_csv),
+            "row_count": written,
+            "transformers_version": package_version("transformers"),
+            "torch_version": package_version("torch"),
+            "numpy_version": package_version("numpy"),
+            "runtime": actual_encoder.runtime_metadata,
+        },
+    )
+    return written

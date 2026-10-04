@@ -1,0 +1,215 @@
+"""EDA and interactive 3D UMAP plots for sample-level GTE embeddings."""
+
+from __future__ import annotations
+
+import csv
+import importlib
+import statistics
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+from pe_research.data.api_traces.config import ApiTraceConfig
+from pe_research.data.io import atomic_json, read_csv, write_csv
+
+BENIGN_COLOR = "#9E9E9E"
+MALICIOUS_COLOR = "#D62728"
+
+
+def _modules() -> tuple[Any, Any, Any, Any]:
+    try:
+        numpy = importlib.import_module("numpy")
+        graph_objects = importlib.import_module("plotly.graph_objects")
+        colors = importlib.import_module("plotly.colors")
+        umap = importlib.import_module("umap")
+    except ModuleNotFoundError as error:
+        raise RuntimeError(
+            "EDA dependencies are missing; run `uv sync --extra embedding --extra eda`"
+        ) from error
+    return numpy, graph_objects, colors, umap
+
+
+def _sample_matrix(
+    path: Path,
+    labels: dict[str, dict[str, str]],
+    split_by_sample: dict[str, str],
+    numpy: Any,
+) -> tuple[Any, list[dict[str, str]]]:
+    vectors: list[list[float]] = []
+    metadata: list[dict[str, str]] = []
+    with path.open("r", encoding="utf-8-sig", newline="") as stream:
+        reader = csv.DictReader(stream)
+        dimensions = [
+            name for name in (reader.fieldnames or []) if name.startswith("embedding_")
+        ]
+        for row in reader:
+            label = labels[row["sample_id"]]
+            vectors.append([float(row[name]) for name in dimensions])
+            metadata.append(
+                {
+                    "sample_id": row["sample_id"],
+                    "class": "Benign" if label["y"] == "0" else "Malicious",
+                    "family": "Benign" if label["y"] == "0" else label["family"],
+                    "split": split_by_sample[row["sample_id"]],
+                }
+            )
+    return numpy.asarray(vectors, dtype=numpy.float32), metadata
+
+
+def _reduce(matrix: Any, seed: int, umap: Any) -> Any:
+    if len(matrix) < 4:
+        raise ValueError("at least four rows are needed for 3D UMAP")
+    return umap.UMAP(
+        n_components=3,
+        n_neighbors=min(15, len(matrix) - 1),
+        min_dist=0.1,
+        metric="cosine",
+        random_state=seed,
+        transform_seed=seed,
+        n_jobs=1,
+    ).fit_transform(matrix)
+
+
+def _plot(
+    coordinates: Any,
+    metadata: list[dict[str, str]],
+    output: Path,
+    *,
+    color_by: str,
+    graph_objects: Any,
+    colors_module: Any,
+) -> None:
+    palette = list(colors_module.qualitative.Alphabet) + list(colors_module.qualitative.Dark24)
+    if color_by == "class":
+        groups = ["Benign", "Malicious"]
+        colors = {"Benign": BENIGN_COLOR, "Malicious": MALICIOUS_COLOR}
+    else:
+        groups = ["Benign", *sorted({row["family"] for row in metadata} - {"Benign"})]
+        colors = {"Benign": BENIGN_COLOR}
+        colors.update(
+            {group: palette[index % len(palette)] for index, group in enumerate(groups[1:])}
+        )
+    figure = graph_objects.Figure()
+    for group in groups:
+        indexes = [index for index, row in enumerate(metadata) if row[color_by] == group]
+        if not indexes:
+            continue
+        customdata = [
+            [
+                metadata[index]["sample_id"],
+                metadata[index]["class"],
+                metadata[index]["family"],
+                metadata[index]["split"],
+            ]
+            for index in indexes
+        ]
+        figure.add_trace(
+            graph_objects.Scatter3d(
+                x=coordinates[indexes, 0],
+                y=coordinates[indexes, 1],
+                z=coordinates[indexes, 2],
+                mode="markers",
+                name=group,
+                marker={"size": 6, "opacity": 0.85, "color": colors[group]},
+                customdata=customdata,
+                hovertemplate=(
+                    "sample=%{customdata[0]}<br>class=%{customdata[1]}"
+                    "<br>family=%{customdata[2]}<br>split=%{customdata[3]}"
+                    "<extra></extra>"
+                ),
+            )
+        )
+    figure.update_layout(
+        title=f"Frozen GTE-ModernBERT CLS sample embeddings — colored by {color_by}",
+        template="plotly_white",
+        scene={"xaxis_title": "UMAP-1", "yaxis_title": "UMAP-2", "zaxis_title": "UMAP-3"},
+        margin={"l": 0, "r": 0, "b": 0, "t": 60},
+    )
+    output.parent.mkdir(parents=True, exist_ok=True)
+    figure.write_html(str(output), include_plotlyjs="directory", full_html=True)
+
+
+def run_api_trace_eda(config: ApiTraceConfig, workspace: Path) -> dict[str, str]:
+    numpy, graph_objects, colors, umap = _modules()
+    artifacts = workspace / "artifacts"
+    output = artifacts / "eda"
+    output.mkdir(parents=True, exist_ok=True)
+    samples = read_csv(artifacts / "samples.csv")
+    label_rows = read_csv(artifacts / "sample_labels.csv")
+    traces = read_csv(artifacts / "traces.csv")
+    labels = {row["sample_id"]: row for row in label_rows}
+    split_by_sample = {row["sample_id"]: row["split"] for row in samples}
+    matrix, metadata = _sample_matrix(
+        artifacts / "sample_embeddings_gte_modernbert768.csv",
+        labels,
+        split_by_sample,
+        numpy,
+    )
+    coordinates = _reduce(matrix, config.pilot.seed, umap)
+    plot_paths: dict[str, Path] = {}
+    for color_by in ("class", "family"):
+        path = output / f"umap_sample_gte_cls_{color_by}_3d.html"
+        _plot(
+            coordinates,
+            metadata,
+            path,
+            color_by=color_by,
+            graph_objects=graph_objects,
+            colors_module=colors,
+        )
+        plot_paths[color_by] = path
+    coordinate_rows = [
+        {
+            **item,
+            "umap_1": format(float(coordinates[index, 0]), ".9g"),
+            "umap_2": format(float(coordinates[index, 1]), ".9g"),
+            "umap_3": format(float(coordinates[index, 2]), ".9g"),
+        }
+        for index, item in enumerate(metadata)
+    ]
+    coordinates_path = output / "umap_sample_gte_cls_3d.csv"
+    write_csv(coordinates_path, list(coordinate_rows[0]), coordinate_rows)
+
+    class_counts = Counter(row["class"] for row in metadata)
+    family_counts = Counter(row["family"] for row in metadata)
+    split_counts = Counter(row["split"] for row in metadata)
+    event_counts = [int(row["event_count"]) for row in traces]
+    summary = {
+        "sample_count": len(samples),
+        "embedding": "frozen GTE-ModernBERT final-layer CLS (768-D)",
+        "class_counts": dict(class_counts),
+        "family_counts": dict(family_counts),
+        "split_counts": dict(split_counts),
+        "event_count": {
+            "min": min(event_counts),
+            "mean": statistics.fmean(event_counts),
+            "median": statistics.median(event_counts),
+            "max": max(event_counts),
+        },
+        "umap": {"components": 3, "metric": "cosine", "seed": config.pilot.seed},
+    }
+    atomic_json(output / "eda_summary.json", summary)
+    report = "\n".join(
+        [
+            "# API-trace pilot EDA",
+            "",
+            f"- Samples: {len(samples)}",
+            "- Embedding: frozen GTE-ModernBERT final-layer CLS (768-D)",
+            f"- Ordered events per sample: min {min(event_counts)}, "
+            f"median {statistics.median(event_counts):.1f}, max {max(event_counts)}",
+            f"- Class counts: {dict(class_counts)}",
+            f"- Family counts: {dict(family_counts)}",
+            f"- Split counts: {dict(split_counts)}",
+            "",
+            "Both plots use all sample embeddings. UMAP axes are visualization coordinates "
+            "and do not represent execution time.",
+        ]
+    )
+    report_path = output / "EDA_REPORT.md"
+    report_path.write_text(report + "\n", encoding="utf-8")
+    return {
+        "report": str(report_path),
+        "sample_binary": str(plot_paths["class"]),
+        "sample_family": str(plot_paths["family"]),
+        "coordinates": str(coordinates_path),
+    }

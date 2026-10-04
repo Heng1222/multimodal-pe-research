@@ -11,6 +11,19 @@ dependencies = [
     "typer>=0.16",
 ]
 
+[project.optional-dependencies]
+embedding = [
+    "sentence-transformers>=5.1,<6",
+    "transformers>=4.48,<6",
+]
+eda = [
+    "plotly>=6,<7",
+    "umap-learn>=0.5.8,<0.6",
+]
+
+[project.scripts]
+pe-research = "pe_research.cli:app"
+
 [dependency-groups]
 dev = [
     "mypy>=1.17",
@@ -30,6 +43,9 @@ module-root = "src"
 [tool.pytest.ini_options]
 addopts = "-ra --strict-config --strict-markers"
 testpaths = ["tests"]
+markers = [
+    "live: opt-in tests that consume VirusTotal public API quota",
+]
 
 [tool.ruff]
 line-length = 100

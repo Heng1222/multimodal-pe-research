@@ -1,0 +1,356 @@
+"""Integrity, leakage, and acceptance checks for API-trace artifacts."""
+
+from __future__ import annotations
+
+import csv
+import math
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+from pe_research.data.api_traces.config import ApiTraceConfig
+from pe_research.data.api_traces.normalization import API_NORMALIZATION_VERSION
+from pe_research.data.io import (
+    atomic_json,
+    load_json,
+    package_version,
+    read_csv,
+    read_csv_header,
+    sha256_file,
+)
+
+FORBIDDEN_EMBEDDING_COLUMNS = {
+    "y",
+    "class",
+    "class_name",
+    "family",
+    "label",
+    "sha",
+    "sha256",
+    "source_sha256",
+    "split",
+    "source",
+}
+
+
+def _validate_events(
+    events_path: Path,
+    sample_ids: list[str],
+    labels: list[dict[str, str]],
+) -> tuple[list[str], Counter[str], Counter[str]]:
+    errors: list[str] = []
+    counts: Counter[str] = Counter()
+    events_by_sample: Counter[str] = Counter()
+    expected_indexes: Counter[str] = Counter()
+    sample_rank = {sample_id: index for index, sample_id in enumerate(sample_ids)}
+    previous_rank = -1
+    forbidden_text = {"benign", "malicious"}
+    forbidden_text.update(row["family"].casefold() for row in labels if row.get("family"))
+    with events_path.open("r", encoding="utf-8-sig", newline="") as stream:
+        for row in csv.DictReader(stream):
+            sample_id = row["sample_id"]
+            if sample_id not in sample_rank:
+                counts["unknown_sample_rows"] += 1
+                continue
+            rank = sample_rank[sample_id]
+            if rank < previous_rank:
+                counts["sample_order_violations"] += 1
+            previous_rank = rank
+            event_index = int(row["event_index"])
+            if event_index != expected_indexes[sample_id]:
+                counts["event_index_violations"] += 1
+            expected_indexes[sample_id] += 1
+            events_by_sample[sample_id] += 1
+            text = row["canonical_text"].casefold()
+            if any(label and label in text for label in forbidden_text):
+                counts["canonical_text_leakage_rows"] += 1
+    if counts["unknown_sample_rows"]:
+        errors.append("events.csv contains unknown sample IDs")
+    if counts["sample_order_violations"]:
+        errors.append("events.csv is not grouped in samples.csv order")
+    if counts["event_index_violations"]:
+        errors.append("events.csv has non-contiguous event_index values")
+    if counts["canonical_text_leakage_rows"]:
+        errors.append("canonical event text contains a class or family label")
+    return errors, events_by_sample, counts
+
+
+def _validate_sample_embeddings(
+    path: Path,
+    sample_ids: list[str],
+    dimension: int,
+) -> tuple[list[str], list[dict[str, str]]]:
+    errors: list[str] = []
+    rows = read_csv(path)
+    header = read_csv_header(path)
+    leaked = {column.casefold() for column in header} & FORBIDDEN_EMBEDDING_COLUMNS
+    if leaked:
+        errors.append(f"sample embedding columns leak protected fields: {sorted(leaked)}")
+    dimensions = [name for name in header if name.startswith("embedding_")]
+    if len(dimensions) != dimension:
+        errors.append(
+            f"sample embedding dimension mismatch: expected {dimension}, got {len(dimensions)}"
+        )
+    embedding_ids = [row["sample_id"] for row in rows]
+    if embedding_ids != sample_ids:
+        errors.append("samples and sample embedding row order/keys differ")
+    for row in rows:
+        values = [float(row[column]) for column in dimensions]
+        if any(not math.isfinite(value) for value in values):
+            errors.append("sample embeddings contain NaN or infinite values")
+            break
+        norm = math.sqrt(sum(value * value for value in values))
+        if not math.isclose(norm, 1.0, rel_tol=1e-4, abs_tol=1e-4):
+            errors.append(f"sample embedding is not L2 normalized: {row['sample_id']}")
+            break
+    return errors, rows
+
+
+def _validate_coverage(
+    rows: list[dict[str, str]],
+    sample_ids: list[str],
+    event_counts: Counter[str],
+    maximum_tokens: int,
+) -> list[str]:
+    errors: list[str] = []
+    if [row["sample_id"] for row in rows] != sample_ids:
+        errors.append("samples and token coverage row order/keys differ")
+    for row in rows:
+        sample_id = row["sample_id"]
+        event_count = int(row["event_count"])
+        original = int(row["original_token_count"])
+        retained = int(row["retained_token_count"])
+        truncated = row["truncated"] == "1"
+        if event_count != event_counts[sample_id]:
+            errors.append(f"token coverage event count mismatch for {sample_id}")
+        if retained <= 0 or retained > maximum_tokens or original < retained:
+            errors.append(f"invalid token coverage for {sample_id}")
+        if truncated != (original > retained):
+            errors.append(f"token truncation flag mismatch for {sample_id}")
+    return errors
+
+
+def validate_api_trace_artifacts(
+    config: ApiTraceConfig,
+    workspace: Path,
+    *,
+    require_complete: bool = True,
+) -> tuple[list[str], dict[str, Any]]:
+    artifacts = workspace / "artifacts"
+    required_names = (
+        "samples.csv",
+        "sample_labels.csv",
+        "traces.csv",
+        "events.csv",
+        "sample_embeddings_gte_modernbert768.csv",
+        "sample_embedding_coverage.csv",
+        "sample_embedding_metadata.json",
+        "source_validation.json",
+        "materialization_state.json",
+    )
+    required = {name: artifacts / name for name in required_names}
+    errors = [f"missing artifact: {path}" for path in required.values() if not path.exists()]
+    if errors:
+        incomplete_quality = {"valid": False, "errors": errors}
+        atomic_json(artifacts / "quality_report.json", incomplete_quality)
+        return errors, incomplete_quality
+
+    samples = read_csv(required["samples.csv"])
+    labels = read_csv(required["sample_labels.csv"])
+    traces = read_csv(required["traces.csv"])
+    sample_ids = [row["sample_id"] for row in samples]
+    label_ids = [row["sample_id"] for row in labels]
+    trace_ids = [row["sample_id"] for row in traces]
+    if len(sample_ids) != len(set(sample_ids)):
+        errors.append("samples.csv contains duplicate sample_id values")
+    if sample_ids != label_ids or sample_ids != trace_ids:
+        errors.append("sample, label, and trace row order/keys differ")
+    hashes = [row["source_sha256"] for row in samples]
+    if len(hashes) != len(set(hashes)):
+        errors.append("samples.csv contains duplicate source SHA-256 values")
+
+    label_by_id = {row["sample_id"]: row for row in labels}
+    class_counts = Counter("benign" if row["y"] == "0" else "malicious" for row in labels)
+    family_counts = Counter(row["family"] for row in labels if row["y"] == "1")
+    split_counts = Counter(row["split"] for row in samples)
+    if any(row["y_known"] != "1" for row in labels):
+        errors.append("a selected sample has an unknown binary label")
+    if any(row["y"] == "1" and row["family_known"] != "1" for row in labels):
+        errors.append("a malicious sample has an unknown family")
+    if any(row["y"] == "0" and row["family"] for row in labels):
+        errors.append("a benign sample has a malware family value")
+
+    expected_samples = config.pilot.target_benign + (
+        config.pilot.family_count * config.pilot.target_per_family
+    )
+    if require_complete:
+        if len(samples) != expected_samples:
+            errors.append(f"expected {expected_samples} samples, got {len(samples)}")
+        expected_classes = {
+            "benign": config.pilot.target_benign,
+            "malicious": config.pilot.family_count * config.pilot.target_per_family,
+        }
+        if dict(class_counts) != expected_classes:
+            errors.append(f"class balance mismatch: {dict(class_counts)}")
+        expected_family_counts = {
+            family: config.pilot.target_per_family
+            for family in config.pilot.expected_families
+        }
+        if dict(family_counts) != expected_family_counts:
+            errors.append(f"family balance mismatch: {dict(family_counts)}")
+        expected_splits: Counter[str] = Counter()
+        targets = [config.pilot.target_benign] + [
+            config.pilot.target_per_family for _family in config.pilot.expected_families
+        ]
+        for family_index, target in enumerate(targets):
+            train_count = max(1, int(target * 0.70))
+            remaining = target - train_count
+            if family_index == 0 or (family_index - 1) % 2:
+                validation_count = remaining // 2
+            else:
+                validation_count = (remaining + 1) // 2
+            expected_splits["train"] += train_count
+            expected_splits["validation"] += validation_count
+            expected_splits["test"] += remaining - validation_count
+        if split_counts != expected_splits:
+            errors.append(f"split balance mismatch: {dict(split_counts)}")
+
+    event_errors, event_count_by_sample, event_quality = _validate_events(
+        required["events.csv"], sample_ids, labels
+    )
+    errors.extend(event_errors)
+    sample_split = {row["sample_id"]: row["split"] for row in samples}
+    for trace in traces:
+        sample_id = trace["sample_id"]
+        count = int(trace["event_count"])
+        if count != event_count_by_sample[sample_id]:
+            errors.append(f"trace/event count mismatch for {sample_id}")
+        if count < config.pilot.minimum_events or count > config.pilot.maximum_events:
+            errors.append(f"event count outside configured range for {sample_id}")
+        if trace["ordering_known"] != "1" or trace["sequence_eligible"] != "1":
+            errors.append(f"selected trace is not sequence eligible: {sample_id}")
+        if trace["split"] != sample_split.get(sample_id):
+            errors.append(f"trace split mismatch for {sample_id}")
+
+    embedding_errors, sample_embeddings = _validate_sample_embeddings(
+        required["sample_embeddings_gte_modernbert768.csv"],
+        sample_ids,
+        config.sample_embedding.dimension,
+    )
+    errors.extend(embedding_errors)
+    coverage = read_csv(required["sample_embedding_coverage.csv"])
+    errors.extend(
+        _validate_coverage(
+            coverage,
+            sample_ids,
+            event_count_by_sample,
+            config.sample_embedding.maximum_tokens,
+        )
+    )
+
+    metadata = load_json(required["sample_embedding_metadata.json"])
+    metadata_expectations = {
+        "model_name": config.sample_embedding.model_name,
+        "model_revision": config.sample_embedding.model_revision,
+        "dimension": config.sample_embedding.dimension,
+        "maximum_tokens": config.sample_embedding.maximum_tokens,
+        "pooling": config.sample_embedding.pooling,
+        "input_format": config.sample_embedding.input_format,
+        "frozen": True,
+        "training_performed": False,
+    }
+    for name, expected in metadata_expectations.items():
+        if metadata.get(name) != expected:
+            errors.append(f"sample embedding metadata mismatch for {name}")
+    embedding_sha = sha256_file(required["sample_embeddings_gte_modernbert768.csv"])
+    if metadata.get("output_sha256") != embedding_sha:
+        errors.append("sample embedding checksum does not match metadata")
+
+    source_validation = load_json(required["source_validation.json"])
+    quality: dict[str, Any] = {
+        "valid": not errors,
+        "errors": errors,
+        "counts": {
+            "samples": len(samples),
+            "traces": len(traces),
+            "events": sum(event_count_by_sample.values()),
+            "sample_embeddings": len(sample_embeddings),
+            "token_truncated_samples": sum(row["truncated"] == "1" for row in coverage),
+        },
+        "class_counts": dict(class_counts),
+        "family_counts": dict(family_counts),
+        "split_counts": dict(split_counts),
+        "ordering_known_traces": sum(row["ordering_known"] == "1" for row in traces),
+        "truncated_traces": sum(row["truncated"] == "1" for row in traces),
+        "timestamp_coverage_mean": (
+            sum(float(row["timestamp_coverage"]) for row in traces) / len(traces)
+            if traces
+            else 0.0
+        ),
+        "multi_label_sha256_excluded": source_validation.get(
+            "multi_label_sha256_excluded", 0
+        ),
+        "event_validation": dict(event_quality),
+        "label_join_count": len(label_by_id),
+    }
+    atomic_json(artifacts / "quality_report.json", quality)
+    return errors, quality
+
+
+def write_api_snapshot(
+    config: ApiTraceConfig,
+    workspace: Path,
+    quality: dict[str, Any],
+) -> None:
+    artifacts = workspace / "artifacts"
+    tracked = [
+        artifacts / name
+        for name in (
+            "samples.csv",
+            "sample_labels.csv",
+            "traces.csv",
+            "events.csv",
+            "sample_embeddings_gte_modernbert768.csv",
+            "sample_embedding_coverage.csv",
+            "sample_embedding_metadata.json",
+            "source_validation.json",
+            "materialization_state.json",
+        )
+        if (artifacts / name).exists()
+    ]
+    atomic_json(
+        artifacts / "snapshot.json",
+        {
+            "schema_version": config.schema_version,
+            "source": {
+                "record_id": config.source.record_id,
+                "version": config.source.version,
+                "metadata_md5": config.source.metadata_md5,
+                "archive_md5": config.source.archive_md5,
+            },
+            "normalization_version": API_NORMALIZATION_VERSION,
+            "sample_embedding": {
+                "model": config.sample_embedding.model_name,
+                "revision": config.sample_embedding.model_revision,
+                "dimension": config.sample_embedding.dimension,
+                "maximum_tokens": config.sample_embedding.maximum_tokens,
+                "pooling": config.sample_embedding.pooling,
+                "input_format": config.sample_embedding.input_format,
+                "frozen": True,
+                "training_performed": False,
+            },
+            "dependencies": {
+                "transformers": package_version("transformers"),
+                "torch": package_version("torch"),
+                "numpy": package_version("numpy"),
+            },
+            "artifacts": {
+                str(path.relative_to(artifacts)): {
+                    "bytes": path.stat().st_size,
+                    "sha256": sha256_file(path),
+                }
+                for path in tracked
+            },
+            "quality": quality,
+        },
+    )
