@@ -1,0 +1,374 @@
+{
+  "conflicting_sha1": 24,
+  "conflicts": [
+    {
+      "labels": [
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Dharma"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Ryuk"
+        }
+      ],
+      "sha1": "0a297e9e5c807c06ad10f4f746f4f9e256df6743"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Stealer",
+          "Class": "Malware",
+          "Family": "Raccoon"
+        }
+      ],
+      "sha1": "2397ba104b77a90b55a29d2be838914c9d1740a6"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "REvil"
+        }
+      ],
+      "sha1": "2c75960079eb449183dc284ca64845f663ab5a61"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "Remcos"
+        }
+      ],
+      "sha1": "335a2c2f30cdefd32f215a82586385cb0958fea5"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Cerber"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Shade"
+        }
+      ],
+      "sha1": "530270f6f0973f66daea806a953874cc8ee39c2e"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "Ursnif"
+        }
+      ],
+      "sha1": "55064d0b6c1fba6ea88adf39b83b702046e7655b"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Ryuk"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "WannaCry"
+        }
+      ],
+      "sha1": "5ff465afaabcbf0150d1a3ab2c2e74f3a4426467"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Trojan",
+          "Class": "Malware",
+          "Family": "Qbot"
+        }
+      ],
+      "sha1": "64081800828041a4e1b124a821f7dd1c2f3e4e6f"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "Remcos"
+        }
+      ],
+      "sha1": "6d65f7f764b90cbe91b286dbfb0e034ed5906459"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Stealer",
+          "Class": "Malware",
+          "Family": "Formbook"
+        }
+      ],
+      "sha1": "76c281f8deffa691c07d822554d8dcf98fe59c3a"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "Gh0st"
+        }
+      ],
+      "sha1": "8d018facc560ca6b583f8352a54e65aac7c2d8d4"
+    },
+    {
+      "labels": [
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "njRat"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "DarkSide"
+        }
+      ],
+      "sha1": "9947d3608d9f3aeba8ffdcc64247aa408298a50e"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Stealer",
+          "Class": "Malware",
+          "Family": "Raccoon"
+        }
+      ],
+      "sha1": "b4fddc09e6af50cdf6c0f9da4345dbca9a6bba97"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Cerber"
+        }
+      ],
+      "sha1": "c07dfdea8da2da5bad036e7c2f5d37582e1cf684"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Shade"
+        }
+      ],
+      "sha1": "c33a0adc164a99036efab532acbc9f7961672aab"
+    },
+    {
+      "labels": [
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "NanoCore"
+        },
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "njRat"
+        }
+      ],
+      "sha1": "ca1fbae296258360c662aa74637c805607a59b60"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Trojan",
+          "Class": "Malware",
+          "Family": "Agenttesla"
+        }
+      ],
+      "sha1": "caebbab5349f57d92182ce56ef4bf71ea60226a7"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Phobos"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "WannaCry"
+        }
+      ],
+      "sha1": "ddd57be00fd1300a95d3dd89a4c813e919a1ac39"
+    },
+    {
+      "labels": [
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "Glupteba"
+        },
+        {
+          "Category": "Stealer",
+          "Class": "Malware",
+          "Family": "Raccoon"
+        }
+      ],
+      "sha1": "e39442388db90a088a8eb8ce46d4f61182334a1b"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Gandcrab"
+        }
+      ],
+      "sha1": "e42431d37561cc695de03b85e8e99c9e31321742"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Phobos"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "Ryuk"
+        }
+      ],
+      "sha1": "ead682ca1356dcd6e6de96f551fbe3676cdc0981"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "WannaCry"
+        }
+      ],
+      "sha1": "eca8571b994fd40e2018f48c214fab6472a98bab"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "Ransomware",
+          "Class": "Malware",
+          "Family": "LockBit"
+        }
+      ],
+      "sha1": "ed555f0162ea6ec5b8b8bada743cfc628d376274"
+    },
+    {
+      "labels": [
+        {
+          "Category": "Benign",
+          "Class": "Benign",
+          "Family": "Benign"
+        },
+        {
+          "Category": "RAT",
+          "Class": "Malware",
+          "Family": "njRat"
+        }
+      ],
+      "sha1": "faae2922e094b482d9756a362ee8f0e3aaa9f737"
+    }
+  ],
+  "conflicts_excluded": true,
+  "duplicate_sha1": 2465,
+  "source_rows": 21703,
+  "unique_sha1": 13904
+}

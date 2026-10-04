@@ -1,0 +1,9 @@
+event_type,count
+file,6015
+registry,3656
+module,787
+network,280
+process,249
+service,98
+command,55
+api,21

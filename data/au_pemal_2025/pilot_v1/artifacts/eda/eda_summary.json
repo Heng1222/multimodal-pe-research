@@ -1,0 +1,96 @@
+{
+  "category_counts": {
+    "Benign": 20,
+    "RAT": 5,
+    "Ransomware": 5,
+    "Stealer": 5,
+    "Trojan": 5
+  },
+  "class_counts": {
+    "Benign": 20,
+    "Malicious": 20
+  },
+  "counts": {
+    "candidate_samples": 100,
+    "duplicate_event_text_rows": 2927,
+    "dynamic_samples": 40,
+    "embeddings": 11161,
+    "events": 11161,
+    "traces": 231,
+    "unique_canonical_texts": 8234
+  },
+  "embedding_norm": {
+    "max": 1.0000001192092896,
+    "mean": 1.0,
+    "min": 0.9999998807907104
+  },
+  "event_type_counts": {
+    "api": 21,
+    "command": 55,
+    "file": 6015,
+    "module": 787,
+    "network": 280,
+    "process": 249,
+    "registry": 3656,
+    "service": 98
+  },
+  "family_counts": {
+    "Agenttesla": 2,
+    "Benign": 20,
+    "Cerber": 1,
+    "DarkSide": 1,
+    "Dharma": 1,
+    "Emotet": 1,
+    "Formbook": 2,
+    "Gandcrab": 1,
+    "Gh0st": 1,
+    "Glupteba": 1,
+    "Guloader": 1,
+    "LockBit": 1,
+    "NanoCore": 1,
+    "Qbot": 1,
+    "Raccoon": 1,
+    "RedLine": 1,
+    "Remcos": 1,
+    "Snake": 1,
+    "Ursnif": 1
+  },
+  "operation_counts": {
+    "call": 21,
+    "change_attribute": 54,
+    "connect": 175,
+    "create": 142,
+    "delete": 1534,
+    "dns_lookup": 62,
+    "execute": 55,
+    "http": 43,
+    "inject": 19,
+    "kill": 6,
+    "load": 787,
+    "open": 6610,
+    "set": 354,
+    "start": 4,
+    "stop": 1,
+    "terminate": 84,
+    "write": 1210
+  },
+  "ordering_known_traces": 0,
+  "sample_event_count": {
+    "max": 1362,
+    "mean": 279.025,
+    "median": 240.5,
+    "min": 6
+  },
+  "seed": 20261002,
+  "split_counts": {
+    "test": 9,
+    "train": 26,
+    "validation": 5
+  },
+  "umap": {
+    "metric": "cosine",
+    "min_dist": 0.1,
+    "n_components": 3,
+    "n_neighbors": 15
+  }
+}

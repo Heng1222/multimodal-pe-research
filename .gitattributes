@@ -14,4 +14,6 @@
 *.dll binary
 *.sys binary
 *.bin binary
+data/au_pemal_2025/pilot_v1/artifacts/event_embeddings_minilm384.csv filter=lfs diff=lfs merge=lfs -text
 data/api_traces_malware_detection/pilot_v1/artifacts/events.csv filter=lfs diff=lfs merge=lfs -text
+data/api_traces_malware_detection/pilot_v1/artifacts/sample_embeddings_gte_modernbert768.csv filter=lfs diff=lfs merge=lfs -text
