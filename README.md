@@ -2,18 +2,42 @@
 
 以可重現、安全且可擴充的方式管理多模態 PE 資料管線、模型與實驗。
 
-目前的第一階段是建立「良性優先、未來可直接接入惡意 PE」的資料 pipeline；後續模型訓練與實驗會沿用相同的 sample identity、schema、設定與產物追蹤方式。詳細需求保留在 [`codex_implementation_prompt.md`](codex_implementation_prompt.md)。
+目前包含 AU-PEMal 與 API Traces 兩套彼此獨立的資料 pipeline；後續模型訓練與實驗沿用相同的 sample identity、schema、設定與產物追蹤方式。
 
 ## 快速開始
 
-本專案以 [uv](https://docs.astral.sh/uv/) 管理 Python、虛擬環境、dependencies 與 lockfile，目標版本為 Python 3.11+。
+本專案以 [uv](https://docs.astral.sh/uv/) 管理 Python 3.11、`.venv`、dependencies 與 lockfile。新 Windows 主機只需先用 Git clone repository，然後在專案根目錄執行：
 
 ```powershell
-uv sync --dev
-uv run pytest
-uv run ruff check .
-uv run mypy
+powershell -ExecutionPolicy Bypass -File .\bootstrap.ps1
 ```
+
+[`bootstrap.ps1`](bootstrap.ps1) 可重複安全執行，會依序：
+
+1. 找不到 uv 時，從 Astral 官方 installer 下載並安裝 uv。
+2. 由 uv 下載 `.python-version` 指定的 Python 3.11，不依賴系統 Python。
+3. 初始化 Git LFS 並執行 `git lfs pull`，取得 dataset CSV、embeddings 與互動 HTML。
+4. 使用 committed `uv.lock` 執行 `uv sync --extra embedding --extra eda --dev --locked`。
+5. 建立/更新 `.venv`、editable-install 本專案，並用 `pe-research --help` 做 smoke check。
+
+腳本成功後不需要手動 activate，直接使用 `uv run --locked` 即會在專案環境執行：
+
+```powershell
+uv run --locked pe-research --help
+uv run --locked pytest
+uv run --locked ruff check .
+uv run --locked mypy
+```
+
+若偏好傳統 activated shell，請在 PowerShell 以 dot-source 執行，讓 activation 保留在目前 shell：
+
+```powershell
+. .\bootstrap.ps1 -Activate
+pe-research --help
+pytest
+```
+
+Git for Windows 是 clone repository 的前置需求，而且通常已包含 Git LFS。若只想同步程式、不下載 LFS dataset，可使用 `-SkipLfs`；一般研究環境不建議略過。
 
 新增套件時不要直接使用 `pip install`：
 
@@ -34,10 +58,11 @@ uv lock --check
 │   ├── data/
 │   ├── model/
 │   └── experiment/
-├── data/                     # 本機資料集與 dataset workspace（內容不進 Git）
+├── data/                     # 版本化的重要 dataset 輸出；raw/cache 仍只留本機
 ├── model/                    # checkpoint、權重與匯出模型（內容不進 Git）
 ├── experiment/               # run logs、metrics 與實驗產物（內容不進 Git）
 ├── docs/                     # 架構、schema、安全與操作文件
+├── bootstrap.ps1             # 新 Windows 主機的一鍵環境還原
 ├── src/pe_research/
 │   ├── data/                 # ingest、validation、analysis pipeline
 │   ├── model/                # 模型、loss 與訓練元件
@@ -45,7 +70,7 @@ uv lock --check
 └── tests/                    # 對應上述模組的測試
 ```
 
-根目錄三個產物目錄只追蹤說明文件，不追蹤真實 PE、資料庫、模型權重或實驗輸出。可重現的設定與程式碼放在 `configs/` 和 `src/`。
+`data/` 會以一般 Git 與 Git LFS 追蹤正式 CSV、labels、embeddings、品質報告和離線互動 HTML；raw archives、真實 PE、VT responses、cache、`.part`、checkpoint 與 secrets 不進 Git。完整清單與跨主機操作方式見 [`data/README.md`](data/README.md)。
 
 ## 階段規劃
 
