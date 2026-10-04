@@ -17,3 +17,5 @@
 data/au_pemal_2025/pilot_v1/artifacts/event_embeddings_minilm384.csv filter=lfs diff=lfs merge=lfs -text
 data/api_traces_malware_detection/pilot_v1/artifacts/events.csv filter=lfs diff=lfs merge=lfs -text
 data/api_traces_malware_detection/pilot_v1/artifacts/sample_embeddings_gte_modernbert768.csv filter=lfs diff=lfs merge=lfs -text
+data/*/pilot_v1/artifacts/eda/*.html filter=lfs diff=lfs merge=lfs -text
+data/*/pilot_v1/artifacts/eda/plotly.min.js filter=lfs diff=lfs merge=lfs -text

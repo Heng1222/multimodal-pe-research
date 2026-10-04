@@ -28,6 +28,11 @@ au_pemal_2025/pilot_v1/artifacts/eda/*
 !au_pemal_2025/pilot_v1/artifacts/eda/source_feature_summary.csv
 !au_pemal_2025/pilot_v1/artifacts/eda/umap_event_3d.csv
 !au_pemal_2025/pilot_v1/artifacts/eda/umap_sample_mean_3d.csv
+!au_pemal_2025/pilot_v1/artifacts/eda/umap_event_binary_3d.html
+!au_pemal_2025/pilot_v1/artifacts/eda/umap_event_family_3d.html
+!au_pemal_2025/pilot_v1/artifacts/eda/umap_sample_binary_3d.html
+!au_pemal_2025/pilot_v1/artifacts/eda/umap_sample_family_3d.html
+!au_pemal_2025/pilot_v1/artifacts/eda/plotly.min.js
 !api_traces_malware_detection/
 api_traces_malware_detection/*
 !api_traces_malware_detection/pilot_v1/
@@ -51,3 +56,6 @@ api_traces_malware_detection/pilot_v1/artifacts/eda/*
 !api_traces_malware_detection/pilot_v1/artifacts/eda/EDA_REPORT.md
 !api_traces_malware_detection/pilot_v1/artifacts/eda/eda_summary.json
 !api_traces_malware_detection/pilot_v1/artifacts/eda/umap_sample_gte_cls_3d.csv
+!api_traces_malware_detection/pilot_v1/artifacts/eda/umap_sample_gte_cls_class_3d.html
+!api_traces_malware_detection/pilot_v1/artifacts/eda/umap_sample_gte_cls_family_3d.html
+!api_traces_malware_detection/pilot_v1/artifacts/eda/plotly.min.js

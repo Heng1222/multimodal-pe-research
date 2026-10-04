@@ -14,6 +14,7 @@ traces、candidate cache、model cache、logs、NumPy cache、checkpoint 與任�
 - AU-PEMal `event_embeddings_minilm384.csv`
 - API Traces `events.csv`
 - API Traces `sample_embeddings_gte_modernbert768.csv`
+- 兩份 dataset 的互動式 UMAP HTML 與其本機 `plotly.min.js`
 
 使用 Git LFS 可以避免把大型 blob 永久塞入一般 Git history。LFS 檔每次修改都會上傳完整的新
 object，因此 dataset snapshot 應盡量 immutable；要做新版時建立 `pilot_v2/`，不要反覆覆寫
@@ -39,6 +40,10 @@ git lfs pull
 安裝 Git LFS 的正常 clone/pull 通常會自動下載 LFS objects；額外執行 `git lfs pull` 可確保
 不是只有 pointer files。`git lfs checkout` 可在 object 已下載但 working tree 仍是 pointer
 時還原實際內容。
+
+互動圖使用 `include_plotlyjs="directory"` 產生；HTML 與 `plotly.min.js` 必須留在同一個
+`artifacts/eda/` 目錄。Pull 完成後可直接用瀏覽器開啟 HTML，不需要 CDN 或網路。也可以用
+對應 pipeline 的 `eda` command，從已追蹤的 embedding、labels 與固定 seed 重新產生。
 
 ## 更新 snapshot
 
