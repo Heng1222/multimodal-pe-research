@@ -1,0 +1,35 @@
+{
+  "schema_version": "au_pemal_pilot/v1",
+  "workspace": "data/au_pemal_2025/pilot_v1",
+  "source": {
+    "name": "AU-PEMal-2025-V2",
+    "commit": "22f3ca6f58e8cd777a7781b06d6bd4d5bc338d59",
+    "url": "https://raw.githubusercontent.com/khbdevelopers/A-Multiclass-Dataset-for-Training-and-Evaluation-of-AI-Models/22f3ca6f58e8cd777a7781b06d6bd4d5bc338d59/AU-PEMal-2025-V2.csv",
+    "filename": "AU-PEMal-2025-V2.csv",
+    "expected_sha256": "8e3f3df56877178271878726b54264fbe342669672eb286535314b3a1a8958c6",
+    "required_columns": ["sha1", "Class", "Category", "Family"]
+  },
+  "pilot": {
+    "seed": 20261002,
+    "target_benign": 20,
+    "target_malicious_per_category": 5,
+    "max_candidates": 100,
+    "minimum_per_class": 10,
+    "minimum_events_per_trace": 5
+  },
+  "virustotal": {
+    "base_url": "https://www.virustotal.com/api/v3",
+    "api_key_env": "VT_API_KEY",
+    "minimum_interval_seconds": 16.0,
+    "request_budget": 200,
+    "behaviours_limit": 40,
+    "max_retries": 2
+  },
+  "embedding": {
+    "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+    "model_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "dimension": 384,
+    "normalize": true,
+    "batch_size": 64
+  }
+}

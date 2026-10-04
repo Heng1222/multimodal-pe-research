@@ -1,0 +1,41 @@
+{
+  "schema_version": "api_traces_malware_detection/pilot_v1",
+  "workspace": "data/api_traces_malware_detection/pilot_v1",
+  "source": {
+    "record_id": "11079764",
+    "version": "0.9",
+    "metadata_url": "https://zenodo.org/records/11079764/files/shas_by_families.json?download=1",
+    "metadata_filename": "shas_by_families.json",
+    "metadata_md5": "b07c925aef91e8f5d76a6a5cf1b4ea6e",
+    "archive_url": "https://zenodo.org/records/11079764/files/API_traces_malware_detection.tar.xz?download=1",
+    "archive_filename": "API_traces_malware_detection.tar.xz",
+    "archive_md5": "03d9610cadb30ee5d6cad50251f111bf",
+    "minimum_free_gib": 25
+  },
+  "pilot": {
+    "seed": 20261002,
+    "target_benign": 500,
+    "family_count": 10,
+    "target_per_family": 50,
+    "expected_families": [
+      "soltern", "vobfus", "eggnog", "nevereg", "urelas",
+      "prepscram", "vilsel", "sfone", "ludbaruma", "vflooder"
+    ],
+    "candidate_multiplier": 4,
+    "minimum_events": 250,
+    "maximum_events": 512,
+    "maximum_trace_bytes": 134217728,
+    "maximum_parse_error_fraction": 0.05
+  },
+  "sample_embedding": {
+    "model_name": "Alibaba-NLP/gte-modernbert-base",
+    "model_revision": "e7f32e3c00f91d699e8c43b53106206bcc72bb22",
+    "dimension": 768,
+    "maximum_tokens": 8192,
+    "batch_size": 2,
+    "normalize": true,
+    "pooling": "last_hidden_state_cls",
+    "input_format": "api_name",
+    "device": "auto"
+  }
+}
