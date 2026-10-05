@@ -38,12 +38,14 @@ from pe_research.data.virustotal import (
     VirusTotalError,
     enrich_candidates,
 )
+from pe_research.experiment.cli import app as experiment_app
 
 app = typer.Typer(help="Multimodal PE research utilities.")
 data_app = typer.Typer(help="AU-PEMal pilot data pipeline.")
 api_traces_app = typer.Typer(help="Ordered Zenodo API-trace pilot pipeline.")
 app.add_typer(data_app, name="data")
 app.add_typer(api_traces_app, name="api-traces")
+app.add_typer(experiment_app, name="experiment")
 
 DEFAULT_CONFIG = Path("configs/data/au_pemal_pilot_v1.yaml")
 DEFAULT_API_TRACE_CONFIG = Path("configs/data/api_traces_pilot_v1.yaml")

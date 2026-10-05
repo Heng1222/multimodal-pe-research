@@ -1,0 +1,22 @@
+{
+  "batch_size": 32,
+  "binary_weight": 1.0,
+  "bottleneck_weight": 0.0625,
+  "data_config": "configs/data/api_traces_pilot_v1.yaml",
+  "device": "cpu",
+  "epochs": 100,
+  "family_weight": 1.0,
+  "gradient_clip": 1.0,
+  "gradient_interval": 10,
+  "joint_weight": 0.25,
+  "learning_rate": 0.001,
+  "model_config_path": "configs/model/dual_branch_ae_v1.yaml",
+  "patience": 8,
+  "schema_version": "dual_branch_api_pilot/v1",
+  "seed": 42,
+  "split_seed": 20261002,
+  "target_fpr": 0.01,
+  "threads": 2,
+  "warmup_epochs": 2,
+  "weight_decay": 0.0001
+}

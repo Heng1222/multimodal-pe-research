@@ -37,6 +37,8 @@ def _validate_events(
     events_path: Path,
     sample_ids: list[str],
     labels: list[dict[str, str]],
+    *,
+    enforce_sample_order: bool = True,
 ) -> tuple[list[str], Counter[str], Counter[str]]:
     errors: list[str] = []
     counts: Counter[str] = Counter()
@@ -66,7 +68,7 @@ def _validate_events(
                 counts["canonical_text_leakage_rows"] += 1
     if counts["unknown_sample_rows"]:
         errors.append("events.csv contains unknown sample IDs")
-    if counts["sample_order_violations"]:
+    if enforce_sample_order and counts["sample_order_violations"]:
         errors.append("events.csv is not grouped in samples.csv order")
     if counts["event_index_violations"]:
         errors.append("events.csv has non-contiguous event_index values")
@@ -135,8 +137,11 @@ def validate_api_trace_artifacts(
     workspace: Path,
     *,
     require_complete: bool = True,
+    report_path: Path | None = None,
+    training_contract: bool = False,
 ) -> tuple[list[str], dict[str, Any]]:
     artifacts = workspace / "artifacts"
+    report_path = report_path or artifacts / "quality_report.json"
     required_names = (
         "samples.csv",
         "sample_labels.csv",
@@ -152,7 +157,7 @@ def validate_api_trace_artifacts(
     errors = [f"missing artifact: {path}" for path in required.values() if not path.exists()]
     if errors:
         incomplete_quality = {"valid": False, "errors": errors}
-        atomic_json(artifacts / "quality_report.json", incomplete_quality)
+        atomic_json(report_path, incomplete_quality)
         return errors, incomplete_quality
 
     samples = read_csv(required["samples.csv"])
@@ -166,16 +171,18 @@ def validate_api_trace_artifacts(
     if sample_ids != label_ids or sample_ids != trace_ids:
         errors.append("sample, label, and trace row order/keys differ")
     hashes = [row["source_sha256"] for row in samples]
-    if len(hashes) != len(set(hashes)):
+    if not training_contract and len(hashes) != len(set(hashes)):
         errors.append("samples.csv contains duplicate source SHA-256 values")
 
     label_by_id = {row["sample_id"]: row for row in labels}
     class_counts = Counter("benign" if row["y"] == "0" else "malicious" for row in labels)
     family_counts = Counter(row["family"] for row in labels if row["y"] == "1")
     split_counts = Counter(row["split"] for row in samples)
-    if any(row["y_known"] != "1" for row in labels):
+    if not training_contract and any(row["y_known"] != "1" for row in labels):
         errors.append("a selected sample has an unknown binary label")
-    if any(row["y"] == "1" and row["family_known"] != "1" for row in labels):
+    if not training_contract and any(
+        row["y"] == "1" and row["family_known"] != "1" for row in labels
+    ):
         errors.append("a malicious sample has an unknown family")
     if any(row["y"] == "0" and row["family"] for row in labels):
         errors.append("a benign sample has a malware family value")
@@ -216,7 +223,7 @@ def validate_api_trace_artifacts(
             errors.append(f"split balance mismatch: {dict(split_counts)}")
 
     event_errors, event_count_by_sample, event_quality = _validate_events(
-        required["events.csv"], sample_ids, labels
+        required["events.csv"], sample_ids, labels, enforce_sample_order=not training_contract
     )
     errors.extend(event_errors)
     sample_split = {row["sample_id"]: row["split"] for row in samples}
@@ -293,7 +300,7 @@ def validate_api_trace_artifacts(
         "event_validation": dict(event_quality),
         "label_join_count": len(label_by_id),
     }
-    atomic_json(artifacts / "quality_report.json", quality)
+    atomic_json(report_path, quality)
     return errors, quality
 
 

@@ -1,0 +1,9 @@
+{
+  "architecture": "dual_branch_ae/v1",
+  "input_dimension": 768,
+  "encoder": [768, 256, 128],
+  "factor": [128, 64, 32],
+  "residual": [128, 64, 32],
+  "joint_decoder": [64, 128, 768],
+  "factor_decoder": [32, 64, 768]
+}

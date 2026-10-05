@@ -5,7 +5,8 @@
 專案將「可版本控制的研究定義」與「大型、敏感或可再生的產物」分離：
 
 - `src/`、`configs/`、`tests/`、`docs/`：提交 Git。
-- `data/`、`model/`、`experiment/`：只保留目錄用途說明，實際產物留在本機或未來的 artifact store。
+- `data/`：正式資料產物依 `data/README.md` 使用 Git／Git LFS；raw、cache、`.part` 留在本機。
+- `model/`、`experiment/`：checkpoint、metrics、logs 與模型 UMAP 留在本機；程式與設定提交 Git。
 
 ## 模組責任
 
@@ -24,3 +25,7 @@
 ## 建議的後續演進
 
 先完成資料 pipeline 的 schema 與 CLI，再依實際需求加入訓練框架、實驗追蹤工具與外部 artifact storage。這樣可避免在資料契約尚未穩定前過早綁定重量級 ML dependencies。
+
+## 第一版 API 雙分支模型
+
+使用既有 768 維 frozen GTE sample embeddings；data adapter 負責 join、正規化與群組切分，model 負責網路與 loss，experiment 負責 run、選模、評估與圖表。自動建立實驗資料夾；主要閱讀入口為完整 `PILOT_REPORT.md` 與離線 UMAP。操作見 [API Pilot 文件](api_model_pilot.md)。

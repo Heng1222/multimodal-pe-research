@@ -85,3 +85,11 @@ uv lock --check
 - 真實 PE bytes、hash inventory、SQLite manifest、secrets 與完整本機來源路徑不得提交 Git。
 - 動態分析只能經明確設定的隔離 sandbox adapter；未設定時安全地標記為 unavailable/skipped。
 - VirusTotal 預設只做 hash lookup，未命中時不自動上傳。
+
+## 第一版 API embedding 模型
+
+已提供 768 維雙分支 AE 的資料準備、訓練、評估、推論與離線 3D UMAP，詳見 [操作文件](docs/api_model_pilot.md)。訓練依賴以 `uv sync --locked --extra training --extra eda --dev` 安裝。
+
+直接執行 `uv run --locked pe-research experiment run`，自動建立資料夾並完成整個實驗，不需手動填入 run 路徑。閱讀該資料夾的 `PILOT_REPORT.md` 與 UMAP 即可判讀結果；既有結果可用 `uv run --locked pe-research experiment report` 重新彙整。
+
+每次實驗會自動用相同 embedding、Train／validation／test 切分與家族字典，訓練良惡與 family 的獨立 MLP 對照組；比較結果一併寫入報告。歷史實驗可直接執行 `uv run --locked pe-research experiment baseline` 補跑對照組。
