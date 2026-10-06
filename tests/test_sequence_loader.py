@@ -4,8 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from pe_research.data.au_pemal_2025.loader import load_sequence_events
 from pe_research.data.io import write_csv
-from pe_research.data.loader import load_sequence_events
 
 
 def test_sequence_loader_rejects_unknown_order_by_default(tmp_path: Path) -> None:

@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-from pe_research.data.config import PipelineConfig
+from pe_research.data.au_pemal_2025.config import PipelineConfig
 from pe_research.data.io import atomic_json, read_csv, write_csv
 
 BENIGN_COLOR = "#9E9E9E"

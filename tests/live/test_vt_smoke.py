@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from pe_research.data.config import load_config
-from pe_research.data.virustotal import VirusTotalClient, read_candidates
+from pe_research.data.au_pemal_2025.config import load_config
+from pe_research.data.au_pemal_2025.virustotal import VirusTotalClient, read_candidates
 
 pytestmark = pytest.mark.live
 

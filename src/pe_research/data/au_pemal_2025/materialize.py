@@ -7,11 +7,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, cast
 
-from pe_research.data.config import PipelineConfig
+from pe_research.data.au_pemal_2025.config import PipelineConfig
+from pe_research.data.au_pemal_2025.normalization import behavior_coverage, events_from_behavior
+from pe_research.data.au_pemal_2025.records import EventRecord
+from pe_research.data.au_pemal_2025.virustotal import read_candidates, read_lookup_results
 from pe_research.data.io import load_json, write_csv
-from pe_research.data.normalization import behavior_coverage, events_from_behavior
-from pe_research.data.records import EventRecord
-from pe_research.data.virustotal import read_candidates, read_lookup_results
 
 
 def _trace_id(sample_key: str, behavior_id: str) -> str:

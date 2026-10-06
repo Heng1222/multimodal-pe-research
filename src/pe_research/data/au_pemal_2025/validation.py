@@ -7,7 +7,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
 
-from pe_research.data.config import PipelineConfig
+from pe_research.data.au_pemal_2025.config import PipelineConfig
+from pe_research.data.au_pemal_2025.normalization import NORMALIZATION_VERSION
 from pe_research.data.io import (
     atomic_json,
     load_json,
@@ -16,7 +17,6 @@ from pe_research.data.io import (
     read_csv_header,
     sha256_file,
 )
-from pe_research.data.normalization import NORMALIZATION_VERSION
 
 FORBIDDEN_EMBEDDING_COLUMNS = {
     "y",

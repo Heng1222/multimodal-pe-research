@@ -12,6 +12,13 @@
 
 ### Data
 
+`src/pe_research/data/` 依 dataset 分成兩個同等層級的 package，名稱與根目錄 `data/` 的分類一致：
+
+- `au_pemal_2025/`：AU-PEMal 設定、採樣、VirusTotal enrichment、event embedding、sequence loader、EDA 與驗證。
+- `api_traces_malware_detection/`：API traces 設定、下載、正規化、sample embedding、訓練資料讀取與群組切分、EDA 與驗證。
+
+兩個 dataset 與 experiment 共用的檔案讀寫工具保留在 `data/io.py`。Dataset 設定由各自 package 匯入；CLI 指令與 `configs/data/` 的檔名維持原有介面，產物仍依設定中的 workspace 讀寫。
+
 統一 sample identity、schema、provenance、stage state 與 feature registry。良性與惡意樣本必須經過相同 pipeline 與分析環境，避免來源或工具差異成為模型捷徑。
 
 ### Model

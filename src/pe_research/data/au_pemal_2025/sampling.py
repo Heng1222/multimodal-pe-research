@@ -8,8 +8,8 @@ from collections import defaultdict, deque
 from collections.abc import Iterable
 from pathlib import Path
 
+from pe_research.data.au_pemal_2025.records import CandidateRecord
 from pe_research.data.io import atomic_json, read_csv, write_csv
-from pe_research.data.records import CandidateRecord
 
 SHA1_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 

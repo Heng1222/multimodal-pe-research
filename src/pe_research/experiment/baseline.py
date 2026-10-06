@@ -12,8 +12,8 @@ import torch
 from sklearn.metrics import average_precision_score, f1_score
 from torch.nn import functional as functional
 
+from pe_research.data.api_traces_malware_detection.training_embeddings import SPLITS
 from pe_research.data.io import atomic_json, load_json, sha256_file, write_csv
-from pe_research.data.training_embeddings import SPLITS
 from pe_research.experiment.config import load_pilot_config
 from pe_research.experiment.metrics import metrics, threshold_at_fpr
 from pe_research.experiment.pilot import interleaved_batches, local_path, prepared_data

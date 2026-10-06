@@ -8,16 +8,16 @@ from pathlib import Path
 
 import pytest
 
-from pe_research.data.config import PilotConfig, VirusTotalConfig
-from pe_research.data.io import write_csv
-from pe_research.data.records import CandidateRecord
-from pe_research.data.virustotal import (
+from pe_research.data.au_pemal_2025.config import PilotConfig, VirusTotalConfig
+from pe_research.data.au_pemal_2025.records import CandidateRecord
+from pe_research.data.au_pemal_2025.virustotal import (
     AuthenticationError,
     QuotaError,
     RequestBudgetExhausted,
     VirusTotalClient,
     enrich_candidates,
 )
+from pe_research.data.io import write_csv
 
 
 class FakeResponse:

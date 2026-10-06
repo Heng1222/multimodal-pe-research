@@ -9,7 +9,7 @@ import urllib.parse
 from collections.abc import Mapping
 from typing import Any
 
-from pe_research.data.records import EventRecord
+from pe_research.data.au_pemal_2025.records import EventRecord
 
 NORMALIZATION_VERSION = "vt_behavior_events/v1"
 

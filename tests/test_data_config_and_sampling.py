@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from pe_research.data.config import load_config
-from pe_research.data.sampling import build_candidates, stable_split
+from pe_research.data.au_pemal_2025.config import load_config
+from pe_research.data.au_pemal_2025.sampling import build_candidates, stable_split
 
 
 def _write_source(path: Path) -> None:

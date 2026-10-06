@@ -38,6 +38,9 @@ api_traces_malware_detection/*
 !api_traces_malware_detection/pilot_v1/
 api_traces_malware_detection/pilot_v1/*
 !api_traces_malware_detection/pilot_v1/README.md
+!api_traces_malware_detection/pilot_v1/examples/
+api_traces_malware_detection/pilot_v1/examples/*
+!api_traces_malware_detection/pilot_v1/examples/api_trace_000001_transformer_input.txt
 !api_traces_malware_detection/pilot_v1/artifacts/
 api_traces_malware_detection/pilot_v1/artifacts/*
 !api_traces_malware_detection/pilot_v1/artifacts/samples.csv

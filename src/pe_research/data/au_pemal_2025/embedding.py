@@ -8,9 +8,9 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Protocol, cast
 
-from pe_research.data.config import EmbeddingConfig
+from pe_research.data.au_pemal_2025.config import EmbeddingConfig
+from pe_research.data.au_pemal_2025.normalization import NORMALIZATION_VERSION
 from pe_research.data.io import atomic_json, package_version, read_csv, write_csv
-from pe_research.data.normalization import NORMALIZATION_VERSION
 
 
 class TextEncoder(Protocol):

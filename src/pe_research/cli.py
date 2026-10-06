@@ -7,37 +7,39 @@ from typing import Annotated
 
 import typer
 
-from pe_research.data.api_traces.config import (
+from pe_research.data.api_traces_malware_detection.config import (
     ApiTraceConfig,
     load_api_trace_config,
     resolve_api_workspace,
 )
-from pe_research.data.api_traces.eda import run_api_trace_eda
-from pe_research.data.api_traces.materialize import materialize_api_traces
-from pe_research.data.api_traces.sample_embedding import write_frozen_sample_embeddings
-from pe_research.data.api_traces.source import (
+from pe_research.data.api_traces_malware_detection.eda import run_api_trace_eda
+from pe_research.data.api_traces_malware_detection.materialize import materialize_api_traces
+from pe_research.data.api_traces_malware_detection.sample_embedding import (
+    write_frozen_sample_embeddings,
+)
+from pe_research.data.api_traces_malware_detection.source import (
     DownloadInterruptedError,
     build_candidate_manifest,
     fetch_sources,
 )
-from pe_research.data.api_traces.validation import (
+from pe_research.data.api_traces_malware_detection.validation import (
     validate_api_trace_artifacts,
     write_api_snapshot,
 )
-from pe_research.data.config import PipelineConfig, load_config, resolve_workspace
-from pe_research.data.eda import run_eda
-from pe_research.data.embedding import write_event_embeddings
-from pe_research.data.io import atomic_json, fetch_file
-from pe_research.data.materialize import materialize
-from pe_research.data.sampling import build_candidates, write_source_features
-from pe_research.data.validation import validate_artifacts, write_snapshot
-from pe_research.data.virustotal import (
+from pe_research.data.au_pemal_2025.config import PipelineConfig, load_config, resolve_workspace
+from pe_research.data.au_pemal_2025.eda import run_eda
+from pe_research.data.au_pemal_2025.embedding import write_event_embeddings
+from pe_research.data.au_pemal_2025.materialize import materialize
+from pe_research.data.au_pemal_2025.sampling import build_candidates, write_source_features
+from pe_research.data.au_pemal_2025.validation import validate_artifacts, write_snapshot
+from pe_research.data.au_pemal_2025.virustotal import (
     AuthenticationError,
     QuotaError,
     RequestBudgetExhausted,
     VirusTotalError,
     enrich_candidates,
 )
+from pe_research.data.io import atomic_json, fetch_file
 from pe_research.experiment.cli import app as experiment_app
 
 app = typer.Typer(help="Multimodal PE research utilities.")

@@ -14,8 +14,19 @@ from typing import Any, cast
 import numpy as np
 import torch
 
-from pe_research.data.api_traces.config import load_api_trace_config, resolve_api_workspace
-from pe_research.data.api_traces.validation import validate_api_trace_artifacts
+from pe_research.data.api_traces_malware_detection.config import (
+    load_api_trace_config,
+    resolve_api_workspace,
+)
+from pe_research.data.api_traces_malware_detection.training_embeddings import (
+    REVISION,
+    SPLITS,
+    group_split,
+    indexed,
+    load_embeddings,
+    sequence_fingerprints,
+)
+from pe_research.data.api_traces_malware_detection.validation import validate_api_trace_artifacts
 from pe_research.data.io import (
     atomic_json,
     load_json,
@@ -23,14 +34,6 @@ from pe_research.data.io import (
     read_csv,
     sha256_file,
     write_csv,
-)
-from pe_research.data.training_embeddings import (
-    REVISION,
-    SPLITS,
-    group_split,
-    indexed,
-    load_embeddings,
-    sequence_fingerprints,
 )
 from pe_research.experiment.config import load_pilot_config
 from pe_research.experiment.metrics import metrics, threshold_at_fpr

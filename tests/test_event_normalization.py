@@ -1,4 +1,4 @@
-from pe_research.data.normalization import events_from_behavior, normalize_text
+from pe_research.data.au_pemal_2025.normalization import events_from_behavior, normalize_text
 
 
 def test_normalization_masks_identifiers_and_secrets() -> None:

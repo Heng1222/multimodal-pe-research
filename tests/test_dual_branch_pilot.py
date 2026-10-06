@@ -10,8 +10,11 @@ import torch
 from typer.testing import CliRunner
 
 from pe_research.cli import app
+from pe_research.data.api_traces_malware_detection.training_embeddings import (
+    group_split,
+    load_embeddings,
+)
 from pe_research.data.io import write_csv
-from pe_research.data.training_embeddings import group_split, load_embeddings
 from pe_research.experiment.metrics import binomial_interval, metrics, threshold_at_fpr
 from pe_research.experiment.pilot import infer, interleaved_batches, prediction_rows
 from pe_research.experiment.visualization import project

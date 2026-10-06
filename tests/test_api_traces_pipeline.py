@@ -8,27 +8,30 @@ import tarfile
 from pathlib import Path
 from typing import Any
 
-from pe_research.data.api_traces.config import (
+from pe_research.data.api_traces_malware_detection.config import (
     ApiTraceConfig,
     ApiTracePilotConfig,
     ApiTraceSourceConfig,
     SampleEmbeddingConfig,
     load_api_trace_config,
 )
-from pe_research.data.api_traces.eda import run_api_trace_eda
-from pe_research.data.api_traces.materialize import _safe_member_sha, materialize_api_traces
-from pe_research.data.api_traces.normalization import normalize_api_event
-from pe_research.data.api_traces.sample_embedding import (
+from pe_research.data.api_traces_malware_detection.eda import run_api_trace_eda
+from pe_research.data.api_traces_malware_detection.materialize import (
+    _safe_member_sha,
+    materialize_api_traces,
+)
+from pe_research.data.api_traces_malware_detection.normalization import normalize_api_event
+from pe_research.data.api_traces_malware_detection.sample_embedding import (
     EncodedBatch,
     TokenCoverage,
     write_frozen_sample_embeddings,
 )
-from pe_research.data.api_traces.source import (
+from pe_research.data.api_traces_malware_detection.source import (
     build_candidate_manifest,
     download_resumable,
     load_single_label_metadata,
 )
-from pe_research.data.api_traces.validation import validate_api_trace_artifacts
+from pe_research.data.api_traces_malware_detection.validation import validate_api_trace_artifacts
 from pe_research.data.io import read_csv
 
 

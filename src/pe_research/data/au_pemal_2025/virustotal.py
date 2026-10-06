@@ -14,9 +14,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, cast
 
-from pe_research.data.config import PilotConfig, VirusTotalConfig
+from pe_research.data.au_pemal_2025.config import PilotConfig, VirusTotalConfig
+from pe_research.data.au_pemal_2025.records import CandidateRecord
 from pe_research.data.io import atomic_json, load_json, read_csv, write_csv
-from pe_research.data.records import CandidateRecord
 
 
 class VirusTotalError(RuntimeError):
